@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高中物理公式动画</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan:   #00f5ff;
+      --green:  #00ff9d;
+      --purple: #b44eff;
+      --yellow: #ffe600;
+      --red:    #ff3c5a;
+      --bg:     #050810;
+      --panel:  #080c18;
+      --border: #0d2040;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: #b0c8e8;
+      min-height: 100vh;
+      /* dot-grid background */
+      background-image: radial-gradient(circle, #0d2040 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* ── scan-line overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,.18) 3px,
+        rgba(0,0,0,.18) 4px
+      );
+      z-index: 999;
+    }
+
+    /* ── header ── */
+    header {
+      text-align: center;
+      padding: 40px 16px 10px;
+      position: relative;
+    }
+    header::before {
+      content: '// PHYSICS ENGINE v2.0';
+      display: block;
+      font-size: 0.72rem;
+      color: var(--green);
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+      opacity: .7;
+    }
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 6px;
+      text-shadow: 0 0 18px var(--cyan), 0 0 40px rgba(0,245,255,.3);
+    }
+    header p {
+      color: #3a6080;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      letter-spacing: 2px;
+    }
+
+    /* ── divider line ── */
+    .hline {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      margin: 18px auto;
+      max-width: 700px;
+      opacity: .4;
+    }
+
+    /* ── nav tabs ── */
+    nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 16px 20px;
+    }
+    nav button {
+      padding: 7px 18px;
+      border: 1px solid #0d2040;
+      background: rgba(0,20,40,.6);
+      color: #3a6080;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.18s;
+      position: relative;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    }
+    nav button::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 2px; height: 60%;
+      background: transparent;
+      transition: background 0.18s;
+    }
+    nav button:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0,245,255,.06);
+      box-shadow: 0 0 10px rgba(0,245,255,.15);
+    }
+    nav button:hover::before { background: var(--cyan); }
+    nav button.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0,245,255,.1);
+      box-shadow: 0 0 14px rgba(0,245,255,.25), inset 0 0 12px rgba(0,245,255,.05);
+    }
+    nav button.active::before { background: var(--cyan); }
+
+    /* ── scene wrapper ── */
+    .scene-wrapper {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 16px 80px;
+    }
+    .scene { display: none; }
+    .scene.active { display: block; }
+
+    /* ── card ── */
+    .card {
+      background: rgba(8,12,24,.92);
+      border: 1px solid #0d2040;
+      border-top: 1px solid rgba(0,245,255,.3);
+      border-radius: 4px;
+      padding: 22px 24px 20px;
+      margin-bottom: 20px;
+      position: relative;
+      box-shadow: 0 0 30px rgba(0,0,0,.6), inset 0 0 60px rgba(0,20,50,.3);
+    }
+    /* corner accents */
+    .card::before, .card::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-color: var(--cyan);
+      border-style: solid;
+      opacity: .6;
+    }
+    .card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    /* ── card header label ── */
+    .card-tag {
+      font-size: 0.68rem;
+      color: var(--green);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      opacity: .8;
+    }
+    .card h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      text-shadow: 0 0 8px rgba(0,245,255,.4);
+    }
+
+    /* ── formula display ── */
+    .formula {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.25rem;
+      color: var(--yellow);
+      margin: 12px 0 16px;
+      text-align: center;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,230,0,.4);
+      background: rgba(255,230,0,.04);
+      border: 1px solid rgba(255,230,0,.1);
+      border-radius: 3px;
+      padding: 10px 0;
+    }
+
+    /* ── canvas ── */
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 3px;
+      background: #020610;
+      border: 1px solid #0d2040;
+      box-shadow: 0 0 20px rgba(0,0,0,.8), 0 0 1px var(--cyan) inset;
+    }
+
+    /* ── controls ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .ctrl-group { flex: 1 1 170px; }
+    .ctrl-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #3a6080;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .ctrl-group label span {
+      color: var(--yellow);
+      text-shadow: 0 0 6px rgba(255,230,0,.5);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: #0d2040;
+      outline: none;
+      border-radius: 0;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: var(--cyan);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      background: linear-gradient(90deg, rgba(0,245,255,.3), #0d2040);
+      height: 3px;
+    }
+
+    /* ── buttons ── */
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn {
+      padding: 7px 22px;
+      border: 1px solid;
+      border-radius: 2px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: all 0.15s;
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    }
+    .btn-primary {
+      background: rgba(0,245,255,.08);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .btn-primary:hover {
+      background: rgba(0,245,255,.18);
+      box-shadow: 0 0 12px rgba(0,245,255,.3);
+    }
+    .btn-danger {
+      background: rgba(255,60,90,.07);
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .btn-danger:hover {
+      background: rgba(255,60,90,.16);
+      box-shadow: 0 0 12px rgba(255,60,90,.3);
+    }
+
+    /* ── desc ── */
+    .desc {
+      font-size: 0.78rem;
+      color: #2a4060;
+      line-height: 1.8;
+      margin-top: 12px;
+      border-top: 1px solid #0d2040;
+      padding-top: 10px;
+      letter-spacing: .5px;
+    }
+    .desc b { color: #4a80aa; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PHYSICS FORMULA LAB</h1>
+  <p>// 拖动滑块 &nbsp;·&nbsp; 实时观察公式驱动运动 //</p>
+</header>
+<div class="hline"></div>
+
+<nav id="nav"></nav>
+
+<div class="scene-wrapper" id="scenes"></div>
+
+<script>
+/* ─────────────────────────────────────────────
+   全局工具
+─────────────────────────────────────────────── */
+function mkCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+/* ─────────────────────────────────────────────
+   场景定义
+─────────────────────────────────────────────── */
+const SCENES = [
+  { id: 'projectile', name: '匀变速运动' },
+  { id: 'newton',     name: '牛顿第二定律' },
+  { id: 'energy',     name: '动能与势能' },
+  { id: 'spring',     name: '弹簧振子' },
+  { id: 'circular',   name: '匀速圆周运动' },
+];
+
+/* ─────────────────────────────────────────────
+   构建 DOM 骨架
+─────────────────────────────────────────────── */
+const nav    = document.getElementById('nav');
+const scenes = document.getElementById('scenes');
+
+SCENES.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.textContent = s.name;
+  btn.dataset.id  = s.id;
+  if (i === 0) btn.classList.add('active');
+  btn.addEventListener('click', () => switchScene(s.id));
+  nav.appendChild(btn);
+
+  const div = document.createElement('div');
+  div.id = 'scene-' + s.id;
+  div.className = 'scene' + (i === 0 ? ' active' : '');
+  scenes.appendChild(div);
+});
+
+function switchScene(id) {
+  document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
+  document.getElementById('scene-' + id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   场景 1：匀变速直线运动 / 抛体
+   x = v₀t + ½at²   v = v₀ + at
+═══════════════════════════════════════════════ */
+(function buildProjectile() {
+  const root = document.getElementById('scene-projectile');
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-tag">MODULE_01 &nbsp;·&nbsp; KINEMATICS</div>
+      <h2>匀变速直线运动 / 抛体运动</h2>
+      <div class="formula">x = v₀t + ½at²　　v = v₀ + at</div>
+      <canvas id="cv-proj" width="840" height="300"></canvas>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>初速度 v₀ (m/s) <span id="lv0">20</span></label>
+          <input type="range" id="sv0" min="0" max="50" step="1" value="20">
+        </div>
+        <div class="ctrl-group">
+          <label>加速度 a (m/s²) <span id="la">5</span></label>
+          <input type="range" id="sa" min="-20" max="20" step="1" value="5">
+        </div>
+        <div class="ctrl-group">
+          <label>仰角 θ (°) <span id="lth">30</span></label>
+          <input type="range" id="sth" min="0" max="90" step="1" value="30">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-proj-play">▶ 发射</button>
+        <button class="btn btn-danger"  id="btn-proj-reset">↺ 重置</button>
+      </div>
+      <div class="desc">
+        <b>x</b> 水平位移 &nbsp;|&nbsp;
+        <b>v₀</b> 初速度 &nbsp;|&nbsp;
+        <b>a</b> 加速度 &nbsp;|&nbsp;
+        <b>θ</b> 抛出角度（斜抛）。<br>
+        轨迹为抛物线，红色标注速度矢量。
+      </div>
+    </div>
+  `;
+
+  const cv  = document.getElementById('cv-proj');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let raf, running = false, t = 0;
+  let v0 = 20, a = 5, th = 30;
+  const scale = 6; // px per meter
+
+  function params() {
+    v0 = +document.getElementById('sv0').value;
+    a  = +document.getElementById('sa').value;
+    th = +document.getElementById('sth').value;
+  }
+
+  ['sv0','sa','sth'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      params();
+      document.getElementById('lv0').textContent = v0;
+      document.getElementById('la').textContent  = a;
+      document.getElementById('lth').textContent = th;
+      if (!running) draw(0);
+    });
+  });
+
+  function draw(tt) {
+    ctx.clearRect(0, 0, W, H);
+
+    const rad = th * Math.PI / 180;
+    const vx0 = v0 * Math.cos(rad);
+    const vy0 = v0 * Math.sin(rad);
+    const g = 9.8;
+
+    // ground
+    ctx.strokeStyle = '#0d2040';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, H-40); ctx.lineTo(W, H-40); ctx.stroke();
+
+    // 轨迹
+    ctx.strokeStyle = '#0d4060';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    let started = false;
+    for (let t2 = 0; t2 < 20; t2 += 0.05) {
+      const px = 40 + vx0 * t2 * scale;
+      const py = H - 40 - (vy0 * t2 - 0.5 * g * t2 * t2) * scale;
+      if (py > H - 40 && t2 > 0) break;
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else ctx.lineTo(px, py);
+      if (px > W) break;
+    }
+    ctx.stroke();
+
+    // ball
+    const bx = 40 + vx0 * tt * scale;
+    const by_m = vy0 * tt - 0.5 * g * tt * tt;
+    const by = H - 40 - by_m * scale;
+
+    if (by >= H - 40) return true; // hit ground
+
+    const vx = vx0;
+    const vy = vy0 - g * tt;
+
+    // velocity vector
+    const vscale = 3;
+    ctx.strokeStyle = '#ff3c5a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx + vx * vscale, by - vy * vscale);
+    ctx.stroke();
+    // arrowhead
+    const ang = Math.atan2(-vy, vx);
+    ctx.fillStyle = '#ff3c5a';
+    ctx.beginPath();
+    ctx.moveTo(bx + vx * vscale, by - vy * vscale);
+    ctx.lineTo(bx + vx * vscale - 10*Math.cos(ang-0.4), by - vy * vscale + 10*Math.sin(ang-0.4));
+    ctx.lineTo(bx + vx * vscale - 10*Math.cos(ang+0.4), by - vy * vscale + 10*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fill();
+
+    // ball circle
+    ctx.beginPath();
+    ctx.arc(bx, by, 10, 0, Math.PI*2);
+    ctx.fillStyle = '#00f5ff';
+    ctx.fill();
+
+    // info
+    ctx.fillStyle = '#00f5ff';
+    ctx.font = '13px "Share Tech Mono", monospace';
+    ctx.fillText(`t = ${tt.toFixed(2)} s`, 10, 20);
+    ctx.fillText(`x = ${(vx0*tt).toFixed(1)} m`, 10, 38);
+    ctx.fillText(`y = ${by_m.toFixed(1)} m`, 10, 56);
+    ctx.fillText(`|v| = ${Math.hypot(vx,vy).toFixed(1)} m/s`, 10, 74);
+
+    return false;
+  }
+
+  function animate() {
+    const done = draw(t);
+    if (done) { running = false; return; }
+    t += 0.02;
+    raf = requestAnimationFrame(animate);
+  }
+
+  document.getElementById('btn-proj-play').addEventListener('click', () => {
+    if (running) return;
+    params(); t = 0; running = true;
+    animate();
+  });
+  document.getElementById('btn-proj-reset').addEventListener('click', () => {
+    cancelAnimationFrame(raf); running = false; t = 0;
+    params(); draw(0);
+  });
+
+  params(); draw(0);
+})();
+
+/* ═══════════════════════════════════════════════
+   场景 2：牛顿第二定律 F = ma
+═══════════════════════════════════════════════ */
+(function buildNewton() {
+  const root = document.getElementById('scene-newton');
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-tag">MODULE_02 &nbsp;·&nbsp; DYNAMICS</div>
+      <h2>牛顿第二定律</h2>
+      <div class="formula">F = ma　　a = F / m</div>
+      <canvas id="cv-newton" width="840" height="220"></canvas>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>合力 F (N) <span id="lF">30</span></label>
+          <input type="range" id="sF" min="0" max="100" step="1" value="30">
+        </div>
+        <div class="ctrl-group">
+          <label>质量 m (kg) <span id="lm">5</span></label>
+          <input type="range" id="sm" min="1" max="20" step="1" value="5">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-nwt-play">▶ 施力</button>
+        <button class="btn btn-danger"  id="btn-nwt-reset">↺ 重置</button>
+      </div>
+      <div class="desc">
+        <b>F</b> 合外力 &nbsp;|&nbsp; <b>m</b> 物体质量 &nbsp;|&nbsp; <b>a</b> 加速度。<br>
+        质量越大，同样的力产生更小的加速度。黄色箭头为合力。
+      </div>
+    </div>
+  `;
+
+  const cv  = document.getElementById('cv-newton');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let raf, running = false, t = 0, x = 60;
+  let F = 30, m = 5;
+
+  function params() {
+    F = +document.getElementById('sF').value;
+    m = +document.getElementById('sm').value;
+  }
+  ['sF','sm'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      params();
+      document.getElementById('lF').textContent = F;
+      document.getElementById('lm').textContent = m;
+      if (!running) drawFrame();
+    });
+  });
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, W, H);
+
+    // ground
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,H-40); ctx.lineTo(W,H-40); ctx.stroke();
+
+    const a = F / m;
+    const bx = Math.min(x, W - 50);
+    const by = H - 40 - 30;
+
+    // box
+    ctx.fillStyle = 'rgba(0,245,255,0.08)';
+    ctx.strokeStyle = '#00f5ff';
+    ctx.lineWidth = 2;
+    ctx.fillRect(bx - 25, by - 30, 50, 30);
+    ctx.strokeRect(bx - 25, by - 30, 50, 30);
+
+    // force arrow
+    const arrowLen = Math.min(F * 2, 200);
+    if (arrowLen > 5) {
+      ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(bx + 25, by - 15); ctx.lineTo(bx + 25 + arrowLen, by - 15); ctx.stroke();
+      ctx.fillStyle = '#ffe600';
+      ctx.beginPath();
+      ctx.moveTo(bx + 25 + arrowLen + 10, by - 15);
+      ctx.lineTo(bx + 25 + arrowLen - 5, by - 22);
+      ctx.lineTo(bx + 25 + arrowLen - 5, by - 8);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffe600';
+      ctx.font = 'bold 13px "Share Tech Mono", monospace';
+      ctx.fillText(`F=${F}N`, bx + 30 + arrowLen/2, by - 22);
+    }
+
+    // info panel
+    ctx.fillStyle = '#00f5ff'; ctx.font = '13px "Share Tech Mono", monospace';
+    ctx.fillText(`a = F/m = ${F}/${m} = ${(a).toFixed(2)} m/s²`, 10, 22);
+    ctx.fillText(`t = ${t.toFixed(2)} s`, 10, 42);
+    ctx.fillText(`v = ${(a * t).toFixed(2)} m/s`, 10, 62);
+  }
+
+  function animate() {
+    const a = F / m;
+    x = 60 + 0.5 * a * t * t * 2;
+    drawFrame();
+    if (x >= W - 50) { running = false; return; }
+    t += 0.02;
+    raf = requestAnimationFrame(animate);
+  }
+
+  document.getElementById('btn-nwt-play').addEventListener('click', () => {
+    if (running) return;
+    params(); running = true; animate();
+  });
+  document.getElementById('btn-nwt-reset').addEventListener('click', () => {
+    cancelAnimationFrame(raf); running = false; t = 0; x = 60;
+    params(); drawFrame();
+  });
+
+  params(); drawFrame();
+})();
+
+/* ═══════════════════════════════════════════════
+   场景 3：动能 & 重力势能
+   Ek = ½mv²    Ep = mgh    E = Ek + Ep = const
+═══════════════════════════════════════════════ */
+(function buildEnergy() {
+  const root = document.getElementById('scene-energy');
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-tag">MODULE_03 &nbsp;·&nbsp; ENERGY</div>
+      <h2>动能与重力势能（机械能守恒）</h2>
+      <div class="formula">Eₖ = ½mv²　　Eₚ = mgh　　E = Eₖ + Eₚ = 常数</div>
+      <canvas id="cv-energy" width="840" height="320"></canvas>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>质量 m (kg) <span id="lem">2</span></label>
+          <input type="range" id="sem" min="0.5" max="5" step="0.5" value="2">
+        </div>
+        <div class="ctrl-group">
+          <label>初始高度 h₀ (m) <span id="leh">8</span></label>
+          <input type="range" id="seh" min="2" max="14" step="0.5" value="8">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-e-play">▶ 释放</button>
+        <button class="btn btn-danger"  id="btn-e-reset">↺ 重置</button>
+      </div>
+      <div class="desc">
+        无摩擦时机械能守恒：势能转化为动能，总量不变。<br>
+        右侧能量柱实时展示 <b style="color:#00f5ff">动能</b>（蓝）与 <b style="color:#ff3c5a">势能</b>（红）的消长。
+      </div>
+    </div>
+  `;
+
+  const cv  = document.getElementById('cv-energy');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let raf, running = false, t = 0;
+  let m = 2, h0 = 8;
+  const g = 9.8, scale = 20;
+
+  function params() {
+    m  = +document.getElementById('sem').value;
+    h0 = +document.getElementById('seh').value;
+  }
+  ['sem','seh'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      params();
+      document.getElementById('lem').textContent = m;
+      document.getElementById('leh').textContent = h0;
+      if (!running) drawFrame(0);
+    });
+  });
+
+  function drawFrame(tt) {
+    ctx.clearRect(0, 0, W, H);
+    const E = m * g * h0;
+    const h = Math.max(0, h0 - 0.5 * g * tt * tt);
+    const v = Math.sqrt(Math.max(0, 2 * g * (h0 - h)));
+    const Ek = 0.5 * m * v * v;
+    const Ep = m * g * h;
+
+    // ramp / track
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, H-40); ctx.lineTo(60, H - 40 - h0*scale); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(60, H-40); ctx.lineTo(500, H-40); ctx.stroke();
+
+    // height marker
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(60, H - 40 - h*scale); ctx.lineTo(200, H - 40 - h*scale); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff3c5a'; ctx.font = '12px "Share Tech Mono", monospace';
+    ctx.fillText(`h=${h.toFixed(2)}m`, 65, H - 44 - h*scale);
+
+    // ball
+    const bx = 60 + (h0 - h) * scale * 1.5;
+    const by = H - 40 - h * scale - 12;
+    ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI*2);
+    ctx.fillStyle = '#00f5ff'; ctx.fill();
+
+    // velocity arrow
+    if (v > 0.1) {
+      ctx.strokeStyle = '#00ff9d'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bx+12, by); ctx.lineTo(bx+12+v*4, by); ctx.stroke();
+      ctx.fillStyle='#00ff9d';
+      ctx.beginPath();
+      ctx.moveTo(bx+12+v*4+8,by); ctx.lineTo(bx+12+v*4-4,by-5); ctx.lineTo(bx+12+v*4-4,by+5);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // energy bars (right panel)
+    const barX = 620, barW = 80, maxH = 220;
+    const kH = (Ek / E) * maxH;
+    const pH = (Ep / E) * maxH;
+
+    ctx.fillStyle = 'rgba(13,32,64,0.8)';
+    ctx.fillRect(barX - 10, H - 40 - maxH - 10, 240, maxH + 20);
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth=1;
+    ctx.strokeRect(barX - 10, H - 40 - maxH - 10, 240, maxH + 20);
+
+    // Ep bar
+    ctx.fillStyle = '#ff3c5a';
+    ctx.fillRect(barX, H - 40 - pH, barW, pH);
+    ctx.fillStyle = '#ff3c5a';
+    ctx.font = '12px "Share Tech Mono", monospace';
+    ctx.fillText(`Ep`, barX + 25, H - 36);
+    ctx.fillText(`${Ep.toFixed(1)}J`, barX + 5, H - 40 - pH - 5);
+
+    // Ek bar
+    ctx.fillStyle = '#00f5ff';
+    ctx.fillRect(barX + 120, H - 40 - kH, barW, kH);
+    ctx.fillStyle = '#00f5ff';
+    ctx.fillText(`Ek`, barX + 145, H - 36);
+    ctx.fillText(`${Ek.toFixed(1)}J`, barX + 120, H - 40 - kH - 5);
+
+    // total E label
+    ctx.fillStyle = '#ffe600'; ctx.font = '13px "Share Tech Mono", monospace';
+    ctx.fillText(`E总 = ${E.toFixed(1)} J`, barX + 20, H - 40 - maxH - 20);
+
+    // info
+    ctx.fillStyle = '#00f5ff'; ctx.font = '13px "Share Tech Mono", monospace';
+    ctx.fillText(`t=${tt.toFixed(2)}s  v=${v.toFixed(2)}m/s`, 10, 20);
+
+    return h <= 0;
+  }
+
+  function animate() {
+    const done = drawFrame(t);
+    if (done) { running = false; return; }
+    t += 0.02;
+    raf = requestAnimationFrame(animate);
+  }
+
+  document.getElementById('btn-e-play').addEventListener('click', () => {
+    if (running) return;
+    params(); running = true; animate();
+  });
+  document.getElementById('btn-e-reset').addEventListener('click', () => {
+    cancelAnimationFrame(raf); running = false; t = 0;
+    params(); drawFrame(0);
+  });
+
+  params(); drawFrame(0);
+})();
+
+/* ═══════════════════════════════════════════════
+   场景 4：弹簧振子 SHM
+   x(t) = A·cos(ωt)    ω = √(k/m)
+═══════════════════════════════════════════════ */
+(function buildSpring() {
+  const root = document.getElementById('scene-spring');
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-tag">MODULE_04 &nbsp;·&nbsp; OSCILLATION</div>
+      <h2>弹簧简谐运动</h2>
+      <div class="formula">x(t) = A·cos(ωt)　　ω = √(k/m)　　T = 2π/ω</div>
+      <canvas id="cv-spring" width="840" height="260"></canvas>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>振幅 A (m) <span id="lA">1</span></label>
+          <input type="range" id="sA" min="0.2" max="2" step="0.1" value="1">
+        </div>
+        <div class="ctrl-group">
+          <label>弹簧劲度 k (N/m) <span id="lk">10</span></label>
+          <input type="range" id="sk" min="1" max="50" step="1" value="10">
+        </div>
+        <div class="ctrl-group">
+          <label>质量 m (kg) <span id="lsm">1</span></label>
+          <input type="range" id="ssm" min="0.2" max="5" step="0.2" value="1">
+        </div>
+      </div>
+      <div class="desc">
+        弹簧振子的角频率 <b>ω = √(k/m)</b>，与振幅无关。<br>
+        右侧实时绘制位移-时间图像，可观察周期变化。
+      </div>
+    </div>
+  `;
+
+  const cv  = document.getElementById('cv-spring');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let A = 1, k = 10, sm = 1;
+  let elapsed = 0;
+  const history = [];
+
+  function params() {
+    A  = +document.getElementById('sA').value;
+    k  = +document.getElementById('sk').value;
+    sm = +document.getElementById('ssm').value;
+  }
+  ['sA','sk','ssm'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      params();
+      document.getElementById('lA').textContent  = A;
+      document.getElementById('lk').textContent  = k;
+      document.getElementById('lsm').textContent = sm;
+    });
+  });
+
+  const wallX = 80, equilibX = 400, scaleX = 80;
+
+  function drawSpring(cx) {
+    const coils = 14;
+    const ampH  = 8;
+    ctx.strokeStyle = '#00f5ff'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(wallX, H/2);
+    for (let i = 0; i <= coils; i++) {
+      const px = wallX + (cx - wallX) * i / coils;
+      const py = H/2 + (i % 2 === 0 ? -ampH : ampH);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.lineTo(cx, H/2);
+    ctx.stroke();
+  }
+
+  function drawFrame(tt) {
+    ctx.clearRect(0, 0, W, H);
+    params();
+
+    const omega = Math.sqrt(k / sm);
+    const T     = 2 * Math.PI / omega;
+    const x     = A * Math.cos(omega * tt);
+    const ballX = equilibX + x * scaleX;
+
+    // wall
+    ctx.fillStyle = '#0d2040';
+    ctx.fillRect(wallX - 12, H/2 - 50, 12, 100);
+    ctx.strokeStyle = '#1a3060'; ctx.lineWidth=1;
+    for (let i=0; i<5; i++) {
+      ctx.beginPath(); ctx.moveTo(wallX-12, H/2-40+i*20); ctx.lineTo(wallX-24, H/2-30+i*20); ctx.stroke();
+    }
+
+    drawSpring(ballX - 18);
+
+    // ball
+    ctx.beginPath(); ctx.arc(ballX, H/2, 18, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,245,255,0.15)'; ctx.fill();
+    ctx.strokeStyle = '#00f5ff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(ballX, H/2, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#00f5ff'; ctx.fill();
+
+    // equilibrium line
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(equilibX, 40); ctx.lineTo(equilibX, H-80); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#1a3060'; ctx.font='11px "Share Tech Mono", monospace';
+    ctx.fillText('平衡位置', equilibX+4, 36);
+
+    // displacement arrow
+    if (Math.abs(x) > 0.05) {
+      ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(equilibX, H/2 + 30); ctx.lineTo(ballX, H/2 + 30); ctx.stroke();
+      ctx.fillStyle = '#ffe600'; ctx.font = '12px "Share Tech Mono", monospace';
+      ctx.fillText(`x=${x.toFixed(2)}m`, (equilibX+ballX)/2 - 25, H/2 + 46);
+    }
+
+    // right: x-t graph
+    const gx = 560, gy = 40, gw = 260, gh = 180;
+    ctx.strokeStyle = '#0d2040'; ctx.lineWidth=1;
+    ctx.strokeRect(gx, gy, gw, gh);
+    ctx.fillStyle='#020610'; ctx.fillRect(gx+1, gy+1, gw-2, gh-2);
+
+    // axes
+    ctx.strokeStyle='#0d2040'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(gx, gy+gh/2); ctx.lineTo(gx+gw, gy+gh/2); ctx.stroke();
+
+    // plot history
+    history.push({ t: tt, x });
+    const maxT = 4 * T;
+    const tMin = tt - maxT;
+
+    ctx.strokeStyle='#00f5ff'; ctx.lineWidth=1.5;
+    ctx.shadowColor='#00f5ff'; ctx.shadowBlur=4;
+    ctx.beginPath();
+    let first = true;
+    history.forEach(pt => {
+      if (pt.t < tMin) return;
+      const px2 = gx + ((pt.t - tMin) / maxT) * gw;
+      const py2 = gy + gh/2 - (pt.x / A) * (gh/2 - 8);
+      first ? ctx.moveTo(px2, py2) : ctx.lineTo(px2, py2);
+      first = false;
+    });
+    ctx.stroke();
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle='#1a3060'; ctx.font='12px "Share Tech Mono", monospace';
+    ctx.fillText('x-t 图像', gx+4, gy+14);
+
+    // info
+    ctx.fillStyle='#00f5ff'; ctx.font='13px "Share Tech Mono", monospace';
+    ctx.fillText(`ω=${omega.toFixed(2)} rad/s  T=${T.toFixed(2)} s`, 10, 20);
+  }
+
+  let last = null;
+  function animate(ts) {
+    if (last === null) last = ts;
+    elapsed += (ts - last) * 0.001;
+    last = ts;
+    if (history.length > 2000) history.splice(0, 200);
+    drawFrame(elapsed);
+    requestAnimationFrame(animate);
+  }
+
+  params(); requestAnimationFrame(animate);
+})();
+
+/* ═══════════════════════════════════════════════
+   场景 5：匀速圆周运动
+   v = ωr    a = v²/r = ω²r    F = mv²/r
+═══════════════════════════════════════════════ */
+(function buildCircular() {
+  const root = document.getElementById('scene-circular');
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-tag">MODULE_05 &nbsp;·&nbsp; CIRCULAR MOTION</div>
+      <h2>匀速圆周运动</h2>
+      <div class="formula">v = ωr　　aₙ = v²/r = ω²r　　F = mv²/r</div>
+      <canvas id="cv-circ" width="840" height="320"></canvas>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>角速度 ω (rad/s) <span id="low">2</span></label>
+          <input type="range" id="sow" min="0.5" max="8" step="0.5" value="2">
+        </div>
+        <div class="ctrl-group">
+          <label>半径 r (m) <span id="lr">3</span></label>
+          <input type="range" id="sr" min="1" max="5" step="0.5" value="3">
+        </div>
+        <div class="ctrl-group">
+          <label>质量 m (kg) <span id="lcm">1</span></label>
+          <input type="range" id="scm" min="0.5" max="5" step="0.5" value="1">
+        </div>
+      </div>
+      <div class="desc">
+        <b>v</b> 线速度（切线方向）&nbsp;|&nbsp;
+        <b>aₙ</b> 向心加速度（指向圆心）&nbsp;|&nbsp;
+        <b>F</b> 向心力。<br>
+        蓝色箭头：速度 &nbsp;&nbsp; 红色箭头：向心加速度
+      </div>
+    </div>
+  `;
+
+  const cv  = document.getElementById('cv-circ');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let omega = 2, r = 3, cm = 1;
+  let elapsed = 0, last = null;
+  const cx = 280, cy = H/2, pxPerM = 40;
+
+  function params() {
+    omega = +document.getElementById('sow').value;
+    r     = +document.getElementById('sr').value;
+    cm    = +document.getElementById('scm').value;
+  }
+  ['sow','sr','scm'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      params();
+      document.getElementById('low').textContent = omega;
+      document.getElementById('lr').textContent  = r;
+      document.getElementById('lcm').textContent = cm;
+    });
+  });
+
+  function arrow(x1,y1,x2,y2,color,label) {
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.hypot(dx,dy);
+    if (len < 2) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    const ang = Math.atan2(dy,dx);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 12*Math.cos(ang-0.4), y2 - 12*Math.sin(ang-0.4));
+    ctx.lineTo(x2 - 12*Math.cos(ang+0.4), y2 - 12*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fill();
+    if (label) {
+      ctx.fillStyle = color; ctx.font='bold 13px monospace';
+      ctx.fillText(label, x2+6, y2+4);
+    }
+  }
+
+  function drawFrame(tt) {
+    ctx.clearRect(0, 0, W, H);
+    params();
+
+    const rPx  = r * pxPerM;
+    const ang  = omega * tt;
+    const bx   = cx + rPx * Math.cos(ang);
+    const by   = cy + rPx * Math.sin(ang);
+
+    // circle track
+    ctx.strokeStyle = 'rgba(0,245,255,0.2)'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.arc(cx, cy, rPx, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // center dot
+    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI*2);
+    ctx.fillStyle='#00f5ff'; ctx.fill();
+
+    // radius line
+    ctx.strokeStyle='rgba(0,245,255,0.15)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(bx,by); ctx.stroke();
+
+    const v  = omega * r;
+    const an = omega * omega * r;
+    const F  = cm * an;
+
+    // velocity arrow (tangent)
+    const vtx = bx - Math.sin(ang) * v * pxPerM * 0.4;
+    const vty = by + Math.cos(ang) * v * pxPerM * 0.4;
+    arrow(bx, by, vtx, vty, '#00f5ff', `v=${v.toFixed(1)}`);
+
+    // centripetal acceleration arrow (toward center)
+    const acLen = Math.min(an * pxPerM * 0.3, rPx * 0.7);
+    const acx = bx + (cx - bx) / rPx * acLen;
+    const acy = by + (cy - by) / rPx * acLen;
+    arrow(bx, by, acx, acy, '#ff3c5a', `a=${an.toFixed(1)}`);
+
+    // ball
+    ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI*2);
+    ctx.fillStyle='rgba(0,245,255,0.15)'; ctx.fill();
+    ctx.strokeStyle='#00f5ff'; ctx.lineWidth=2;
+    ctx.shadowColor='#00f5ff'; ctx.shadowBlur=10;
+    ctx.stroke(); ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI*2);
+    ctx.fillStyle='#00f5ff'; ctx.fill();
+
+    // angle arc
+    ctx.strokeStyle='#ffe600'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(cx,cy,30,0,ang % (Math.PI*2)); ctx.stroke();
+    ctx.fillStyle='#ffe600'; ctx.font='12px "Share Tech Mono", monospace';
+    ctx.fillText(`θ=${(ang % (Math.PI*2) * 180/Math.PI).toFixed(0)}°`, cx+35, cy-5);
+
+    // info panel
+    const px = 560, py = 40;
+    ctx.fillStyle='rgba(2,6,16,0.9)'; ctx.fillRect(px,py,260,200);
+    ctx.strokeStyle='#0d2040'; ctx.lineWidth=1; ctx.strokeRect(px,py,260,200);
+    ctx.strokeStyle='rgba(0,245,255,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+8,py); ctx.moveTo(px,py); ctx.lineTo(px,py+8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px+260,py+200); ctx.lineTo(px+252,py+200); ctx.moveTo(px+260,py+200); ctx.lineTo(px+260,py+192); ctx.stroke();
+
+    const entries = [
+      ['ω',        `${omega} rad/s`,              '#4a80aa'],
+      ['r',        `${r} m`,                      '#4a80aa'],
+      ['m',        `${cm} kg`,                    '#4a80aa'],
+      ['v = ωr',   `${v.toFixed(2)} m/s`,         '#00f5ff'],
+      ['aₙ = ω²r', `${an.toFixed(2)} m/s²`,       '#ff3c5a'],
+      ['F = maₙ',  `${F.toFixed(2)} N`,            '#ffe600'],
+      ['T = 2π/ω', `${(2*Math.PI/omega).toFixed(2)} s`, '#00ff9d'],
+    ];
+    entries.forEach(([label, val, color], i) => {
+      ctx.fillStyle='#1a3060'; ctx.font='12px "Share Tech Mono", monospace';
+      ctx.fillText(label, px+12, py+28+i*24);
+      ctx.fillStyle=color; ctx.font='bold 13px "Share Tech Mono", monospace';
+      ctx.fillText('= ' + val, px+120, py+28+i*24);
+    });
+  }
+
+  function animate(ts) {
+    if (last === null) last = ts;
+    elapsed += (ts - last) * 0.001;
+    last = ts;
+    drawFrame(elapsed);
+    requestAnimationFrame(animate);
+  }
+
+  params(); requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
